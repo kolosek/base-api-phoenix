@@ -43,6 +43,14 @@ defmodule CompanyApiWeb do
     end
   end
 
+
+  def model do 
+    quote do 
+      use Ecto.Schema 
+      import Ecto.Changeset 
+    end 
+  end
+
   def router do
     quote do
       use Phoenix.Router
