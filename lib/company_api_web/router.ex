@@ -13,14 +13,15 @@ defmodule CompanyApiWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", CompanyApiWeb do
-    pipe_through :browser # Use the default browser stack
-
-    get "/", PageController, :index
-  end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", CompanyApiWeb do
-  #   pipe_through :api
+  #scope "/", CompanyApiWeb do
+  # pipe_through :browser # Use the default browser stack
+  #
+  # get "/", PageController, :index
   # end
+
+   scope "/api", CompanyApiWeb do
+     pipe_through :api
+
+     resources "/users", CompanyApiWeb.UserController, only: [:index, :create]
+   end
 end
