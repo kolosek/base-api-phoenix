@@ -23,6 +23,8 @@ defmodule CompanyApiWeb do
       import Plug.Conn
       import CompanyApiWeb.Router.Helpers
       import CompanyApiWeb.Gettext
+      import Ecto
+      alias CompanyApi.Repo
     end
   end
 
@@ -44,11 +46,11 @@ defmodule CompanyApiWeb do
   end
 
 
-  def model do 
-    quote do 
-      use Ecto.Schema 
-      import Ecto.Changeset 
-    end 
+  def model do
+    quote do
+      use Ecto.Schema
+      import Ecto.Changeset
+    end
   end
 
   def router do
