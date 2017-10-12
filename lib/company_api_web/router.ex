@@ -22,6 +22,6 @@ defmodule CompanyApiWeb.Router do
    scope "/api", CompanyApiWeb do
      pipe_through :api
 
-     resources "/users", CompanyApiWeb.UserController, only: [:index, :create]
+     resources "/users", UserController, only: [:index, :create]
    end
 end

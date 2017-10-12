@@ -6,6 +6,6 @@ defmodule CompanyApiWeb.UserController do
   def index(conn, _params) do
     users = Repo.all(User)
 
-    render(conn, "index.json", %{users: users})
+    render(conn, "index.json", users: users)
   end
 end

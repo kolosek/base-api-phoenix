@@ -6,7 +6,8 @@ defmodule CompanyApi.Repo.Migrations.CreateUser do
       add :name, :varchar
       add :subname, :varchar
       add :email, :varchar
-      add :job, :varchar 
+      add :job, :varchar
+      add :password, :varchar
 
       timestamps()
     end

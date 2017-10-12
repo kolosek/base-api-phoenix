@@ -1,7 +1,7 @@
 defmodule CompanyApiWeb.UserView do
   use CompanyApiWeb, :view
 
-  def render(conn, "index.json", %{users: users}) do
+  def render("index.json", %{users: users}) do
     render_many(users, CompanyApiWeb.UserView, "user.json")
   end
 
