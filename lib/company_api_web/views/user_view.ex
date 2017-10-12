@@ -5,6 +5,10 @@ defmodule CompanyApiWeb.UserView do
     render_many(users, CompanyApiWeb.UserView, "user.json")
   end
 
+  def render("create.json", %{user: user}) do
+    render_one(user, CompanyApiWeb.UserView, "user.json")
+  end
+
   def render("user.json", %{user: user}) do
     %{id: user.id, name: user.name, subname: user.subname, email: user.email, job: user.job}
   end
