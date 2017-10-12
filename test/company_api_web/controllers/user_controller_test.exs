@@ -1,7 +1,8 @@
 defmodule CompanyApiWeb.UserControllerTest do
   use CompanyApiWeb.ConnCase
+  use Bamboo.Test
 
-  alias CompanyApiWeb.User
+  alias CompanyApiWeb.{User, Email}
   alias CompanyApi.Repo
 
   @valid_data %{name: "Jim", subname: "Doe", email: "doe@gmail.com", job: "CEO"}
@@ -31,8 +32,8 @@ defmodule CompanyApiWeb.UserControllerTest do
 
     expected =
       [
-        %{"id" => user.id, "name" => "John", "subname" => "Doe", "email" => "doe@gmail.com", "job" => "engineer"},
-        %{"id" => user_one.id, "name" => "Jane", "subname" => "Doe", "email" => "jane@gmail.com", "job" => "architect"}
+        %{"id" => user.id, "name" => "John", "subname" => "Doe", "email" => "doe@gmail.com", "job" => "engineer", "password" => nil},
+        %{"id" => user_one.id, "name" => "Jane", "subname" => "Doe", "email" => "jane@gmail.com", "job" => "architect", "password" => nil}
       ]
 
     assert response == expected
@@ -44,6 +45,6 @@ defmodule CompanyApiWeb.UserControllerTest do
       |> json_response(201)
 
     assert Repo.get_by(User, name: "Jim")
-    assert_delivered_mail Email.create_mail(response.password)
+    assert_delivered_email Email.create_mail(response["password"], response["email"])
   end
 end

@@ -9,6 +9,10 @@ config :company_api, CompanyApiWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+#Configure bamboo test adapter
+config :company_api, CompanyApi.Mailer,
+  adapter: Bamboo.TestAdapter
+
 # Configure your database
 config :company_api, CompanyApi.Repo,
   adapter: Ecto.Adapters.Postgres,
