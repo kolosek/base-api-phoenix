@@ -22,5 +22,8 @@ defmodule CompanyApiWeb.Router do
 
      resources "/users", UserController, only: [:index, :create]
      put("/users/:id", UserController, :change_password)
+
+     post "/login", SessionController, :create
+     delete "/logout", SessionController, :delete
    end
 end
