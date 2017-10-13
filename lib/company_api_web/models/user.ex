@@ -17,4 +17,12 @@ defmodule CompanyApiWeb.User do
     |> validate_required([:name, :subname, :email, :job])
     |> validate_format(:email, ~r/\S+@\S+\.\S+/)
   end
+
+  def pass_changeset(changeset, params \\ %{}) do
+    changeset
+    |> cast(params, [:name, :subname, :email, :job, :password])
+    |> validate_required([:name, :subname, :email, :job, :password])
+    |> validate_format(:email, ~r/\S+@\S+\.\S+/)
+    |> validate_length(:password, min: 6)
+  end
 end

@@ -13,15 +13,14 @@ defmodule CompanyApiWeb.Router do
     plug :accepts, ["json"]
   end
 
-  #scope "/", CompanyApiWeb do
-  # pipe_through :browser # Use the default browser stack
-  #
-  # get "/", PageController, :index
-  # end
+  if Mix.env == :dev do
+    forward "/send_mails", Bamboo.EmailPreviewPlug
+  end
 
    scope "/api", CompanyApiWeb do
      pipe_through :api
 
      resources "/users", UserController, only: [:index, :create]
+     put("/users/:id", UserController, :change_password)
    end
 end
