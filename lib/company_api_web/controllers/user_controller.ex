@@ -1,7 +1,7 @@
 defmodule CompanyApiWeb.UserController do
   use CompanyApiWeb, :controller
 
-  alias CompanyApiWeb.User
+  alias CompanyApiWeb.{User, Email}
   @pass_length 5
 
   def index(conn, _params) do
@@ -14,7 +14,13 @@ defmodule CompanyApiWeb.UserController do
     params = Map.put(user_data, "password", generate_password())
     case Repo.insert(User.reg_changeset(%User{}, params)) do
       {:ok, user} ->
-        #TODO: send email with new password
+        spawn(fn() ->
+          Task.Supervisor.start_child(EmailSupervisor, fn() ->
+            Email.create_mail(user.password, user.email)
+            |> CompanyApi.Mailer.deliver_later
+          end)
+        end)
+
         conn
         |> put_status(:created)
         |> render("create.json", user: user)

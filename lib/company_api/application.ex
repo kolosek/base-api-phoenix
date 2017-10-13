@@ -7,6 +7,7 @@ defmodule CompanyApi.Application do
     children = [
       supervisor(CompanyApi.Repo, []),
       supervisor(CompanyApiWeb.Endpoint, []),
+      supervisor(Task.Supervisor, [[name: EmailSupervisor]])
     ]
 
     opts = [strategy: :one_for_one, name: CompanyApi.Supervisor]

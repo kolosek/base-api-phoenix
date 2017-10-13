@@ -1,6 +1,6 @@
 defmodule CompanyApiWeb.UserControllerTest do
   use CompanyApiWeb.ConnCase
-  use Bamboo.Test
+  use Bamboo.Test, shared: :true
 
   alias CompanyApiWeb.{User, Email}
   alias CompanyApi.Repo
@@ -45,6 +45,7 @@ defmodule CompanyApiWeb.UserControllerTest do
       |> json_response(201)
 
     assert Repo.get_by(User, name: "Jim")
+    :timer.sleep 500
     assert_delivered_email Email.create_mail(response["password"], response["email"])
   end
 end
