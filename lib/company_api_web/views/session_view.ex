@@ -10,4 +10,8 @@ defmodule CompanyApiWeb.SessionView do
       }
     }
   end
+
+  def render("error.json", %{message: reason}) do
+    %{data: reason}
+  end
 end

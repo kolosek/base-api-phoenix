@@ -4,6 +4,8 @@ defmodule CompanyApiWeb.SessionControllerTest do
   alias CompanyApi.Repo
   alias CompanyApiWeb.User
 
+  @invalid_credentials %{email: "jane@gmail.com", password: "jane"}
+
   setup do
     user = Repo.insert!(User.reg_changeset(%User{}, %{name: "John",
                                                       subname: "Doe",
@@ -38,5 +40,11 @@ defmodule CompanyApiWeb.SessionControllerTest do
     refute response["data"]["expire"] == nil
   end
 
+  test "login with invalid credentials", %{conn: conn} do
+    response =
+      post(conn, session_path(conn, :create), creds: @invalid_credentials)
+      |> json_response(401)
 
+    assert response["data"] != ""
+  end
 end

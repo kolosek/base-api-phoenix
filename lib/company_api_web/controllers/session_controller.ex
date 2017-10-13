@@ -15,7 +15,7 @@ defmodule CompanyApiWeb.SessionController do
         |> put_resp_header("authorization", "Bearer #{token}")
         |> put_status(:ok)
         |> render("login.json", user: user, token: token, exp: expire)
-        {:error, reason} ->
+      {:error, reason} ->
         conn
         |> put_status(401)
         |> render("error.json", message: reason)
