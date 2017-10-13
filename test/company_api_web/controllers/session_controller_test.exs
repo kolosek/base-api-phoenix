@@ -8,7 +8,8 @@ defmodule CompanyApiWeb.SessionControllerTest do
     user = Repo.insert!(User.reg_changeset(%User{}, %{name: "John",
                                                       subname: "Doe",
                                                       email: "doe@gmail.com",
-                                                      job: "engineer"
+                                                      job: "engineer",
+                                                      password: "RandomPass"
                        }))
     conn =
       build_conn()
@@ -20,18 +21,21 @@ defmodule CompanyApiWeb.SessionControllerTest do
   test "login as user", %{conn: conn, user: user} do
     user_credentials = %{email: user.email, password: user.password}
     response =
-      post(conn, session_path(conn, :login), user_credentials)
+      post(conn, session_path(conn, :create), creds: user_credentials)
       |> json_response(200)
 
     expected = %{
-      "id"    => user.id,
-      "name"  => user.name,
-      "email" => user.email,
-      "job"   => user.job
+      "id"        => user.id,
+      "name"      => user.name,
+      "subname"   => user.subname,
+      "password"  => user.password,
+      "email"     => user.email,
+      "job"       => user.job
     }
 
     assert response["data"]["user"] == expected
     refute response["data"]["token"] == nil
+    refute response["data"]["expire"] == nil
   end
 
 

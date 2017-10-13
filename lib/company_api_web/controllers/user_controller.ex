@@ -2,7 +2,6 @@ defmodule CompanyApiWeb.UserController do
   use CompanyApiWeb, :controller
 
   alias CompanyApiWeb.{User, Email}
-  @pass_length 5
 
   def index(conn, _params) do
     users = Repo.all(User)
@@ -11,7 +10,7 @@ defmodule CompanyApiWeb.UserController do
   end
 
   def create(conn, %{"user" => user_data}) do
-    params = Map.put(user_data, "password", generate_password())
+    params = Map.put(user_data, "password", User.generate_password())
     case Repo.insert(User.reg_changeset(%User{}, params)) do
       {:ok, user} ->
         spawn(fn() ->
@@ -49,11 +48,5 @@ defmodule CompanyApiWeb.UserController do
         |> put_status(:unprocessable_entity)
         |> render("error.json", user: user)
     end
-  end
-
-  defp generate_password do
-    :crypto.strong_rand_bytes(@pass_length)
-    |> Base.encode64
-    |> binary_part(0, @pass_length)
   end
 end

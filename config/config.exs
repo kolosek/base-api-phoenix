@@ -27,10 +27,9 @@ config :company_api, CompanyApi.Mailer,
   adapter: Bamboo.LocalAdapter
 
 #Configure guardian
-config :guardian, Guardian,
+config :company_api, CompanyApi.Guardian,
   issuer: "CompanyApi",
-  secret_key: Mix.env,
-  serializer: CompanyApi.GuardianSerializer,
+  secret_key: "QDG1lCBdCdjwF49UniOpbxgUINhdyvQDcFQUQam+65O4f9DgWRe09BYMEEDU1i9X",
   verify_issuer: true
 
 import_config "#{Mix.env}.exs"
