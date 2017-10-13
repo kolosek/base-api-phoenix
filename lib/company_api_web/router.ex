@@ -21,5 +21,6 @@ defmodule CompanyApiWeb.Router do
      pipe_through :api
 
      resources "/users", UserController, only: [:index, :create]
+     put("/users/:id", UserController, :change_password)
    end
 end

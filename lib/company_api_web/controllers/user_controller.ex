@@ -31,6 +31,22 @@ defmodule CompanyApiWeb.UserController do
     end
   end
 
+  def change_password(conn, %{"id" => id, "password" => new_password}) do
+    user = Repo.get(User, id)
+    user_pass = User.pass_changeset(user, %{password: new_password})
+
+    case Repo.update(user_pass) do
+      {:ok, user} ->
+        conn
+        |> put_status(:ok)
+        |> render("password.json", pass: user.password)
+      {:error, user} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render("error.json", user: user)
+    end
+  end
+
   defp generate_password do
     :crypto.strong_rand_bytes(@pass_length)
     |> Base.encode64

@@ -6,6 +6,7 @@ defmodule CompanyApiWeb.UserControllerTest do
   alias CompanyApi.Repo
 
   @valid_data %{name: "Jim", subname: "Doe", email: "doe@gmail.com", job: "CEO"}
+  @password "Random pass"
 
   setup do
     user = Repo.insert!(User.reg_changeset(%User{}, %{ name: "John",
@@ -39,13 +40,40 @@ defmodule CompanyApiWeb.UserControllerTest do
     assert response == expected
   end
 
-  test "creates and renders user", %{conn: conn} do
-    response =
-      post(conn, user_path(conn, :create), user: @valid_data)
-      |> json_response(201)
+  describe "tries to create and render" do
+    test "user with valid data", %{conn: conn} do
+      response =
+        post(conn, user_path(conn, :create), user: @valid_data)
+        |> json_response(201)
 
-    assert Repo.get_by(User, name: "Jim")
-    :timer.sleep 500
-    assert_delivered_email Email.create_mail(response["password"], response["email"])
+      assert Repo.get_by(User, name: "Jim")
+      assert_delivered_email Email.create_mail(response["password"], response["email"])
+    end
+
+    test "user with invalid data", %{conn: conn} do
+      response =
+        post(conn, user_path(conn, :create), user: %{})
+        |> json_response(422)
+
+      assert response["errors"] != %{}
+    end
+
+    test "when user has no email", %{conn: conn} do
+      response =
+        post(conn, user_path(conn, :create), user: Map.delete(@valid_data, :email))
+        |> json_response(422)
+
+      assert response["errors"] != %{}
+      refute Repo.get_by(User, %{name: "Jim"})
+    end
+  end
+
+  test "tries to change user password", %{conn: conn, user: user} do
+    response =
+      put(conn, user_path(conn, :change_password, user.id), password: @password)
+      |> json_response(200)
+
+    assert response == @password
+    assert Repo.get_by(User, %{id: user.id}).password == @password
   end
 end
