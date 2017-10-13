@@ -7,6 +7,7 @@ defmodule CompanyApiWeb.UserControllerTest do
 
   @valid_data %{name: "Jim", subname: "Doe", email: "doe@gmail.com", job: "CEO"}
   @password "Random pass"
+  @short_pass "pass"
 
   setup do
     user = Repo.insert!(User.reg_changeset(%User{}, %{ name: "John",
@@ -68,12 +69,32 @@ defmodule CompanyApiWeb.UserControllerTest do
     end
   end
 
-  test "tries to change user password", %{conn: conn, user: user} do
-    response =
-      put(conn, user_path(conn, :change_password, user.id), password: @password)
-      |> json_response(200)
+  describe "tries to change user password" do
+    test "with valid data", %{conn: conn, user: user} do
+      response =
+        put(conn, user_path(conn, :change_password, user.id), password: @password)
+        |> json_response(200)
 
-    assert response == @password
-    assert Repo.get_by(User, %{id: user.id}).password == @password
+      assert response == @password
+      assert Repo.get_by(User, %{id: user.id}).password == @password
+    end
+
+    test "with short password", %{conn: conn, user: user} do
+      response =
+        put(conn, user_path(conn, :change_password, user.id), password: @short_pass)
+        |> json_response(422)
+
+      assert response["errors"] != %{}
+      refute Repo.get_by(User, %{id: user.id}).password
+    end
+
+    test "with wrong user id", %{conn: conn} do
+      response =
+        put(conn, user_path(conn, :change_password, 0), password: @password)
+        |> json_response(422)
+
+      assert response["errors"] != %{}
+      refute Repo.get_by(User, %{id: 0})
+    end
   end
 end

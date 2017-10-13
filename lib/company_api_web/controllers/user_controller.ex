@@ -32,7 +32,11 @@ defmodule CompanyApiWeb.UserController do
   end
 
   def change_password(conn, %{"id" => id, "password" => new_password}) do
-    user = Repo.get(User, id)
+    user =
+      case Repo.get(User, id) do
+        user when user != nil -> user
+        nil -> %User{}
+      end
     user_pass = User.pass_changeset(user, %{password: new_password})
 
     case Repo.update(user_pass) do
