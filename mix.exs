@@ -20,7 +20,7 @@ defmodule CompanyApi.Mixfile do
   def application do
     [
       mod: {CompanyApi.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo]
+      extra_applications: [:logger, :runtime_tools, :bamboo, :guardian]
     ]
   end
 
@@ -41,7 +41,8 @@ defmodule CompanyApi.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:bamboo, "~> 0.8"}
+      {:bamboo, "~> 0.8"},
+      {:guardian, "~> 1.0-beta"}
     ]
   end
 

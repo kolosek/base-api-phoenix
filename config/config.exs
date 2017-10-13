@@ -26,4 +26,11 @@ config :logger, :console,
 config :company_api, CompanyApi.Mailer,
   adapter: Bamboo.LocalAdapter
 
+#Configure guardian
+config :guardian, Guardian,
+  issuer: "CompanyApi",
+  secret_key: Mix.env,
+  serializer: CompanyApi.GuardianSerializer,
+  verify_issuer: true
+
 import_config "#{Mix.env}.exs"
