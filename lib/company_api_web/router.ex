@@ -14,6 +14,7 @@ defmodule CompanyApiWeb.Router do
   end
 
   pipeline :auth do
+    plug Guardian.Plug.Pipeline, module: CompanyApi.Guardian
     plug Guardian.Plug.VerifyHeader, realm: "Bearer"
     plug Guardian.Plug.LoadResource
     plug Guardian.Plug.EnsureAuthenticated, handler: CompanyApi.GuardianErrorHandler

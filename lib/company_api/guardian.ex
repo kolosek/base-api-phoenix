@@ -4,8 +4,8 @@ defmodule CompanyApi.Guardian do
   alias CompanyApi.Repo
   alias CompanyApiWeb.User
 
-  def subject_for_token(resource, _claims) do
-    {:ok, to_string(resource.id)}
+  def subject_for_token(user = %User{}, _claims) do
+    {:ok, "User:#{user.id}"}
   end
 
   def subject_for_token(_) do
@@ -13,10 +13,12 @@ defmodule CompanyApi.Guardian do
   end
 
   def resource_from_claims(claims) do
-    {:ok, Repo.get_by(User, claims["sub"])}
-  end
-
-  def resource_from_claims(_) do
-    {:error, "Unknown type"}
+    id = Enum.at(String.split(claims["sub"], ":"), 1)
+    case Repo.get(User, String.to_integer(id)) do
+      user when user != nil ->
+        {:ok, user}
+      nil ->
+        {:error, "Unknown type"}
+    end
   end
 end

@@ -38,7 +38,7 @@ defmodule CompanyApiWeb.User do
   def check_registration(params) do
     case Repo.get_by(__MODULE__, params) do
       user when user != nil -> {:ok, user}
-      nil -> {:error, "No user with these credenials"}
+      nil -> {:error, "No user with these credentials"}
     end
   end
 end

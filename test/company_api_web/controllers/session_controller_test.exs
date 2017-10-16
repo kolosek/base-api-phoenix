@@ -45,6 +45,17 @@ defmodule CompanyApiWeb.SessionControllerTest do
       post(conn, session_path(conn, :create), creds: @invalid_credentials)
       |> json_response(401)
 
-    assert response["data"] != ""
+    assert response["data"] == "No user with these credentials"
+  end
+
+  test "logout logged in user", %{conn: conn, user: user} do
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user)
+    token = Guardian.Plug.current_token(new_conn)
+
+    logout_response =
+      delete(new_conn, session_path(new_conn, :delete))
+      |> json_response(200)
+
+    assert logout_response
   end
 end
