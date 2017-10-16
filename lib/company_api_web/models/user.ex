@@ -2,6 +2,8 @@ defmodule CompanyApiWeb.User do
   use CompanyApiWeb, :model
 
   alias CompanyApi.Repo
+  alias CompanyApiWeb.{Conversation, Message}
+
   @pass_length 15
 
   schema "users" do
@@ -11,6 +13,8 @@ defmodule CompanyApiWeb.User do
     field :password, :string
     field :job, :string
 
+    has_many :conversations, Conversation
+    has_many :messages, Message
     timestamps()
   end
 
