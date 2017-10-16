@@ -2,9 +2,6 @@ defmodule CompanyApiWeb.UserControllerTest do
   use CompanyApiWeb.ConnCase
   use Bamboo.Test, shared: :true
 
-  alias CompanyApiWeb.{User, Email}
-  alias CompanyApi.Repo
-
   @valid_data %{name: "Jim", subname: "Doe", email: "doe@gmail.com", job: "CEO"}
   @password "Random pass"
   @short_pass "pass"

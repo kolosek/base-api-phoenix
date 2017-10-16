@@ -1,9 +1,6 @@
 defmodule CompanyApiWeb.SessionControllerTest do
   use CompanyApiWeb.ConnCase
 
-  alias CompanyApi.Repo
-  alias CompanyApiWeb.User
-
   @invalid_credentials %{email: "jane@gmail.com", password: "jane"}
 
   setup do
