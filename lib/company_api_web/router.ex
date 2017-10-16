@@ -13,14 +13,30 @@ defmodule CompanyApiWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :auth do
+    plug Guardian.Plug.Pipeline, module: CompanyApi.Guardian,
+                                 error_handler: CompanyApi.GuardianErrorHandler
+    plug Guardian.Plug.VerifyHeader, realm: "Bearer"
+    plug Guardian.Plug.EnsureAuthenticated
+    plug Guardian.Plug.LoadResource, ensure: true
+  end
+
   if Mix.env == :dev do
     forward "/send_mails", Bamboo.EmailPreviewPlug
   end
 
-   scope "/api", CompanyApiWeb do
-     pipe_through :api
+  scope "/api", CompanyApiWeb do
+    pipe_through :api
 
-     resources "/users", UserController, only: [:index, :create]
-     put("/users/:id", UserController, :change_password)
-   end
+    resources "/users", UserController, only: [:index, :create]
+    put("/users/:id", UserController, :change_password)
+
+    post "/login", SessionController, :create
+  end
+
+  scope "/api", CompanyApiWeb do
+    pipe_through [:api, :auth]
+
+    delete "/logout", SessionController, :delete
+  end
 end

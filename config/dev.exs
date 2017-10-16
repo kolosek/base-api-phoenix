@@ -56,3 +56,8 @@ config :company_api, CompanyApi.Repo,
   database: "company_dev",
   hostname: "localhost",
   pool_size: 10
+
+  config :company_api, CompanyApi.Guardian,
+    secret_key: "J/JI6b54huioOCfWclutcwuEL12BbTAyhQ8zzy4IPedFJft3KxsJnJD/4IHJiVN"
+
+

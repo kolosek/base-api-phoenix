@@ -67,7 +67,7 @@ defmodule CompanyApiWeb.UserControllerTest do
       assert response["errors"] != %{}
       refute Repo.get_by(User, %{name: "Jim"})
     end
-  end
+ end
 
   describe "tries to change user password" do
     test "with valid data", %{conn: conn, user: user} do

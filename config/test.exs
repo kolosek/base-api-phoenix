@@ -21,3 +21,9 @@ config :company_api, CompanyApi.Repo,
   database: "company_api_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+  #Configure Guardian
+config :company_api, CompanyApi.Guardian,
+  issuer: "CompanyApi",
+  secret_key: "Ti7yf41PQCNyTHTlOL8s2HJgmq/Z1OlsfRi7yK71oZwVgLi51+Bi9pDLohg8CWa"
+
