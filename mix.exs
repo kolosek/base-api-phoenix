@@ -42,7 +42,8 @@ defmodule CompanyApi.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:bamboo, "~> 0.8"},
-      {:guardian, "~> 1.0-beta"}
+      {:guardian, "~> 1.0-beta"},
+      {:poison, "~> 3.1"}
     ]
   end
 

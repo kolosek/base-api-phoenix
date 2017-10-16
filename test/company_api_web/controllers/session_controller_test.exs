@@ -50,12 +50,19 @@ defmodule CompanyApiWeb.SessionControllerTest do
 
   test "logout logged in user", %{conn: conn, user: user} do
     new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user)
-    token = Guardian.Plug.current_token(new_conn)
 
     logout_response =
       delete(new_conn, session_path(new_conn, :delete))
       |> json_response(200)
 
-    assert logout_response
+    assert logout_response["data"] == "Success logout"
+  end
+
+  test "tries to logout unlogged user", %{conn: conn} do
+    logout_response =
+      delete(conn, session_path(conn, :delete))
+      |> json_response(401)
+
+    assert logout_response["data"] != ""
   end
 end

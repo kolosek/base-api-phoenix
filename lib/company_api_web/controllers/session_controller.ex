@@ -21,4 +21,18 @@ defmodule CompanyApiWeb.SessionController do
         |> render("error.json", message: reason)
     end
   end
+
+  def delete(conn, _params) do
+    token = Guardian.Plug.current_token(conn)
+    case Guardian.revoke(CompanyApi.Guardian, token) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> render("logout.json")
+      {:error, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render("error.json", message: "Token does not exist")
+    end
+  end
 end

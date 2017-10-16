@@ -11,6 +11,10 @@ defmodule CompanyApiWeb.SessionView do
     }
   end
 
+  def render("logout.json", _) do
+    %{data: "Success logout"}
+  end
+
   def render("error.json", %{message: reason}) do
     %{data: reason}
   end

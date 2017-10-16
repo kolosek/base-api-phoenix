@@ -14,10 +14,11 @@ defmodule CompanyApiWeb.Router do
   end
 
   pipeline :auth do
-    plug Guardian.Plug.Pipeline, module: CompanyApi.Guardian
+    plug Guardian.Plug.Pipeline, module: CompanyApi.Guardian,
+                                 error_handler: CompanyApi.GuardianErrorHandler
     plug Guardian.Plug.VerifyHeader, realm: "Bearer"
+    plug Guardian.Plug.EnsureAuthenticated
     plug Guardian.Plug.LoadResource
-    plug Guardian.Plug.EnsureAuthenticated, handler: CompanyApi.GuardianErrorHandler
   end
 
   if Mix.env == :dev do
