@@ -35,8 +35,8 @@ defmodule CompanyApiWeb.SessionControllerTest do
       "job"       => user.job
     }
 
-    assert response["data"]["user"] == expected
-    refute response["data"]["token"] == nil
+    assert response["data"]["user"]   == expected
+    refute response["data"]["token"]  == nil
     refute response["data"]["expire"] == nil
   end
 
@@ -63,6 +63,6 @@ defmodule CompanyApiWeb.SessionControllerTest do
       delete(conn, session_path(conn, :delete))
       |> json_response(401)
 
-    assert logout_response["data"] != ""
+    assert logout_response["message"] == "unauthenticated"
   end
 end
