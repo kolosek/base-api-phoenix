@@ -15,9 +15,9 @@ defmodule CompanyApi.Guardian do
   def resource_from_claims(claims) do
     id = Enum.at(String.split(claims["sub"], ":"), 1)
     case Repo.get(User, String.to_integer(id)) do
-      user when user != nil ->
+      user ->
         {:ok, user}
-      nil ->
+      nil  ->
         {:error, "Unknown type"}
     end
   end
