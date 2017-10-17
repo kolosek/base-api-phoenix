@@ -22,6 +22,10 @@ defmodule CompanyApiWeb.ChannelCase do
 
       # The default endpoint for testing
       @endpoint CompanyApiWeb.Endpoint
+
+      # Aliases
+      alias CompanyApi.Repo
+      alias CompanyApiWeb.User
     end
   end
 

@@ -12,11 +12,15 @@ defmodule CompanyApiWeb.ChannelUsers do
   end
 
   def user_joined(user, channel) do
-    GenServer.cast(__MODULE__, {:user_joined, user, channel})
+    GenServer.call(__MODULE__, {:user_joined, user, channel})
   end
 
   def user_leave(user, channel) do
-    GenServer.cast(__MODULE__, {:user_leave, user, channel})
+    GenServer.call(__MODULE__, {:user_left, user, channel})
+  end
+
+  def clear() do
+    GenServer.call(__MODULE__, :clear)
   end
 
   #Server callbacks
@@ -25,26 +29,31 @@ defmodule CompanyApiWeb.ChannelUsers do
     {:reply, Map.get(online_users, channel), online_users}
   end
 
-  def handle_cast({:user_joined, channel, user}, _from, online_users) do
+  def handle_call({:user_joined, user, channel}, _from, online_users) do
     new_state =
       case Map.get(online_users, channel) do
         nil ->
           Map.put(online_users, channel, [user])
         users ->
-          Map.put(online_users, channel, Enum.uniq([user | users]))
+          Map.put(online_users, channel,
+                  Enum.uniq_by([user | users], fn user -> user.email end))
       end
 
-    {:noreply, new_state, new_state}
+    {:reply, new_state, new_state}
   end
 
-  def handle_cast({:user_left, channel, user}, _from, online_users) do
+  def handle_call({:user_left, user, channel}, _from, online_users) do
     new_users =
       online_users
       |> Map.get(channel)
-      |> Enum.reject(&(&1.id == user.id))
+      |> Enum.reject(&(&1.email == user.email))
 
-    new_state = Map.update!(online_users, channel, fn -> new_users end)
+    new_state = Map.update!(online_users, channel, fn(_) -> new_users end)
 
-    {:noreply, new_state, new_state}
+    {:reply, new_state, new_state}
+  end
+
+  def handle_call(:clear, _from, _online_users) do
+    {:reply, %{}, %{}}
   end
 end
