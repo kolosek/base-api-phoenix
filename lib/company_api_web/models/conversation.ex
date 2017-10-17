@@ -6,8 +6,8 @@ defmodule CompanyApiWeb.Conversation do
   schema "conversations" do
     field :status, :string
 
-    belongs_to :sender, User
-    belongs_to :recipient, User
+    belongs_to :sender, User, foreign_key: :sender_id
+    belongs_to :recipient, User, foreign_key: :recipient_id
     has_many :messages, Message
 
     timestamps()

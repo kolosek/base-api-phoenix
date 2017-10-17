@@ -15,5 +15,10 @@ defmodule CompanyApiWeb.MessagesTest do
     assert message.valid?
   end
 
+  test "message with missing data" do
+    message = Message.changeset(%Message{}, %{})
+
+    refute message.valid?
+  end
 end
 

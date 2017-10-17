@@ -8,7 +8,7 @@ defmodule CompanyApiWeb.Message do
     field :date, Ecto.DateTime
 
     belongs_to :conversation, Conversation
-    belongs_to :sender, User
+    belongs_to :sender, User, foreign_key: :sender_id
 
     timestamps()
   end

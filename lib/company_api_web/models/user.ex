@@ -13,8 +13,9 @@ defmodule CompanyApiWeb.User do
     field :password, :string
     field :job, :string
 
-    has_many :conversations, Conversation
-    has_many :messages, Message
+    has_many :sender_conversations, Conversation, foreign_key: :sender_id
+    has_many :recipient_conversations, Conversation, foreign_key: :recipient_id
+    has_many :messages, Message, foreign_key: :sender_id
     timestamps()
   end
 
