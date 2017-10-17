@@ -1,4 +1,4 @@
-defmodule CompanyApiWeb.ChannelUsers do
+defmodule CompanyApi.ChannelUsers do
   use GenServer
 
   #Client side
