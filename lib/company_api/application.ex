@@ -8,8 +8,8 @@ defmodule CompanyApi.Application do
       supervisor(CompanyApi.Repo, []),
       supervisor(CompanyApiWeb.Endpoint, []),
       supervisor(Task.Supervisor, [[name: EmailSupervisor]]),
-      worker(CompanyApiWeb.ChannelUsers, [%{}]),
-      worker(CompanyApiWeb.ChannelSessions, [%{}])
+      worker(CompanyApi.ChannelUsers, [%{}]),
+      worker(CompanyApi.ChannelSessions, [%{}])
     ]
 
     opts = [strategy: :one_for_one, name: CompanyApi.Supervisor]

@@ -2,14 +2,14 @@ defmodule CompanyApiWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", CompanyApiWeb.RoomChannel
+  channel "room:chat", CompanyApiWeb.ChatRoom
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   def connect(%{"token" => token}, socket) do
-    case Guardian.Phoenix.Socket.authenticate(socket, Guardian, token) do
+    case Guardian.Phoenix.Socket.authenticate(socket, CompanyApi.Guardian, token) do
       {:ok, socket} ->
         {:ok, socket}
       {:error, _} ->
