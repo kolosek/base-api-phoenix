@@ -1,7 +1,7 @@
 defmodule ConversationControllerTest do
   use CompanyApiWeb.ConnCase
 
-  alias CompanyApiWeb.User
+  alias CompanyApiWeb.{User, Conversation}
 
   @user_one %{name:    "John",
               subname: "Doe",
@@ -36,12 +36,44 @@ defmodule ConversationControllerTest do
   test "creates conversation", %{user_one: user_one, user_two: user_two, conn: conn} do
     new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user_one)
     res =
-      post(new_conn, conversation_path(conn, :create), %{conversation: user_two.id})
+      post(new_conn, conversation_path(new_conn, :create), %{recipient: user_two.id})
 
     assert response(res, 201)
   end
 
   test "tries to create existing conversation", %{user_one: user_one, user_two: user_two, conn: conn} do
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user_one)
+    post(new_conn, conversation_path(new_conn, :create), %{recipient: user_two.id})
 
+    res =
+      post(new_conn, conversation_path(new_conn, :create), %{recipient: user_two.id})
+      |> json_response(200)
+
+    refute res["id"] == nil
+  end
+
+  test "tries to create with invalid data", %{user_one: user_one, conn: conn} do
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user_one)
+    res =
+      post(new_conn, conversation_path(new_conn, :create), %{recipient: 0})
+      |> json_response(422)
+
+    assert res["error"] != nil
+  end
+
+  test "gets active conversations", %{user_one: user_one, user_two: user_two, conn: conn} do
+    conversation =
+      %Conversation{}
+      |> Conversation.changeset(%{sender_id: user_one.id, recipient_id: user_two.id})
+      |> Repo.insert!
+
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user_one)
+    res =
+      get(new_conn, conversation_path(new_conn, :index))
+      |> json_response(200)
+
+    expected = %{id: conversation.id}
+
+    assert res == expected
   end
 end
