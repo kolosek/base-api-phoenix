@@ -1,7 +1,7 @@
 defmodule ConversationControllerTest do
   use CompanyApiWeb.ConnCase
 
-  alias CompanyApiWeb.{User, Conversation}
+  alias CompanyApiWeb.User
 
   @user_one %{name:    "John",
               subname: "Doe",
@@ -34,20 +34,14 @@ defmodule ConversationControllerTest do
   end
 
   test "creates conversation", %{user_one: user_one, user_two: user_two, conn: conn} do
-    conversation =
-      %Conversation{}
-      |> Conversation.changeset(%{sender_id: user_one.id, recipient_id: user_two.id})
-      |> Repo.insert!
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user_one)
+    res =
+      post(new_conn, conversation_path(conn, :create), %{conversation: user_two.id})
 
-    expected = %{
-      id: conversation.id,
-      sender_id: user_one.id,
-      recipient_id: user_two.id,
-      status: nil
-    }
+    assert response(res, 201)
+  end
 
-    response = post(conn, conversation_path(conn, :index))
+  test "tries to create existing conversation", %{user_one: user_one, user_two: user_two, conn: conn} do
 
-    assert response == expected
   end
 end
