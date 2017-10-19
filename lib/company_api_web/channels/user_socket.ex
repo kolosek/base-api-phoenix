@@ -17,7 +17,7 @@ defmodule CompanyApiWeb.UserSocket do
     end
   end
 
-  def connect(_params, socket), do: :error
+  def connect(_params, _socket), do: :error
 
   def id(socket) do
     user = Guardian.Phoenix.Socket.current_resource(socket)
