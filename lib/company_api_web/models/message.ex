@@ -1,11 +1,12 @@
 defmodule CompanyApiWeb.Message do
   use CompanyApiWeb, :model
+  import Ecto.Query
 
   alias CompanyApiWeb.{User, Conversation}
 
   schema "messages" do
     field :content, :string
-    field :date, Ecto.DateTime
+    field :date, :naive_datetime
 
     belongs_to :conversation, Conversation
     belongs_to :sender, User, foreign_key: :sender_id
@@ -25,7 +26,7 @@ defmodule CompanyApiWeb.Message do
     message_data = %{sender_id: user_id,
                      conversation_id: conv_id,
                      content: content,
-                     date: Ecto.DateTime.from_erl(:erlang.localtime)
+                     date: DateTime.to_naive(DateTime.utc_now)
                     }
 
     message = changeset(%__MODULE__{}, message_data)
@@ -35,5 +36,10 @@ defmodule CompanyApiWeb.Message do
       {:error, _error} ->
         nil
     end
+  end
+
+  def get_message_query(conv_id) do
+    (from message in __MODULE__,
+     where: message.conversation_id == ^conv_id)
   end
 end

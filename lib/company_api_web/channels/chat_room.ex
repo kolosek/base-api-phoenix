@@ -2,6 +2,7 @@ defmodule CompanyApiWeb.ChatRoom do
   use CompanyApiWeb, :channel
 
   alias CompanyApi.{ChannelSessions, ChannelUsers}
+  alias CompanyApiWeb.Message
 
   def join("room:chat", _payload, socket) do
     user = Guardian.Phoenix.Socket.current_resource(socket)
@@ -10,13 +11,19 @@ defmodule CompanyApiWeb.ChatRoom do
     {:ok, socket}
   end
 
-  def handle_in("send_msg", %{"user" => id, "message" => content}, socket) do
+  def handle_in("send_msg", %{"user" => id, "conv" => conv_id, "message" => content}, socket) do
     case ChannelSessions.get_socket id do
       nil ->
         {:error, socket}
       socketz ->
-        push socketz, "receive_msg", %{message: content}
-        {:noreply, socket}
+        user = Guardian.Phoenix.Socket.current_resource(socket)
+        case Message.create_message(user.id, conv_id, content) do
+          nil ->
+            {:noreply, socket}
+          message ->
+            push socketz, "receive_msg", %{message: message}
+            {:noreply, socket}
+        end
     end
   end
 
