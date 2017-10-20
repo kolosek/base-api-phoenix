@@ -20,4 +20,20 @@ defmodule CompanyApiWeb.Message do
     |> foreign_key_constraint(:sender_id)
     |> foreign_key_constraint(:conversation_id)
   end
+
+  def create_message(user_id, conv_id, content) do
+    message_data = %{sender_id: user_id,
+                     conversation_id: conv_id,
+                     content: content,
+                     date: Ecto.DateTime.from_erl(:erlang.localtime)
+                    }
+
+    message = changeset(%__MODULE__{}, message_data)
+    case CompanyApi.Repo.insert(message) do
+      {:ok, message} ->
+        message
+      {:error, _error} ->
+        nil
+    end
+  end
 end

@@ -36,10 +36,10 @@ defmodule CompanyApiWeb.MessagesTest do
       %Conversation{}
       |> Conversation.changeset(%{sender_id: user_one.id,
                                   recipient_id: user_two.id
-                                 }
+                                 })
       |> Repo.insert!
 
-    {:ok, user: user_one, conv: conv}
+    {:ok, user: user_one, conv: conversation}
   end
 
   test "message with valid data" do
@@ -55,7 +55,17 @@ defmodule CompanyApiWeb.MessagesTest do
   end
 
   test "message creation", %{user: user, conv: conv} do
+    message = Message.create_message(user.id, conv.id, "Haha message")
 
+    inserted_message = Repo.get!(Message, message.id)
+
+    assert message == inserted_message
+  end
+
+  test "message creation with invalid data" do
+    message = Message.create_message(0, 0, "Wrong message")
+
+    assert message == nil
   end
 end
 
