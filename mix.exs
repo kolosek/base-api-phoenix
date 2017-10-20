@@ -20,7 +20,8 @@ defmodule CompanyApi.Mixfile do
   def application do
     [
       mod: {CompanyApi.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :guardian]
+      extra_applications: [:logger, :runtime_tools,
+                           :bamboo, :guardian, :arc_ecto]
     ]
   end
 

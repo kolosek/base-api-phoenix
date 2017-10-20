@@ -29,8 +29,7 @@ defmodule CompanyApiWeb.Router do
     pipe_through :api
 
     resources "/users", UserController, only: [:index, :create]
-    put("/users/:id", UserController, :change_password)
-
+    put "/users/:id", UserController, :change_password
     post "/login", SessionController, :create
   end
 
@@ -38,6 +37,7 @@ defmodule CompanyApiWeb.Router do
     pipe_through [:api, :auth]
 
     delete "/logout", SessionController, :delete
+    post "/users/upload", UserController, :upload
     get "/conversations", ConversationController, :index
     post "/conversations", ConversationController, :create
     get "/messages", MessageController, :index

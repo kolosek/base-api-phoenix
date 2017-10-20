@@ -17,6 +17,10 @@ defmodule CompanyApiWeb.UserView do
     password
   end
 
+  def render("upload.json", %{user: user}) do
+    %{image: user.profile_image}
+  end
+
   def render("user.json", %{user: user}) do
     %{id: user.id, name: user.name, subname: user.subname, password: user.password, email: user.email, job: user.job}
   end
