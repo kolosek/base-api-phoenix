@@ -6,8 +6,7 @@ defmodule CompanyApiWeb.ConversationController do
   def index(conn, _params) do
     user = Guardian.Plug.current_resource(conn)
     conversations =
-      (from conv in Conversation,
-       where: conv.sender_id == ^user.id)
+      Conversation.get_conversations(user.id)
       |> Repo.all
 
     conn

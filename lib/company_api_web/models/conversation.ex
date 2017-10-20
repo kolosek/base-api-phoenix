@@ -1,5 +1,6 @@
 defmodule CompanyApiWeb.Conversation do
   use CompanyApiWeb, :model
+  import Ecto.Query
 
   alias CompanyApiWeb.{User, Message}
 
@@ -21,5 +22,10 @@ defmodule CompanyApiWeb.Conversation do
     |> unique_constraint(:recipient_id)
     |> foreign_key_constraint(:sender_id)
     |> foreign_key_constraint(:recipient_id)
+  end
+
+  def get_conversations(id) do
+    (from conv in __MODULE__,
+     where: conv.sender_id == ^id)
   end
 end
