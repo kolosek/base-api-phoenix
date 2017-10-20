@@ -24,6 +24,7 @@ defmodule CompanyApiWeb do
       import CompanyApiWeb.Router.Helpers
       import CompanyApiWeb.Gettext
       import Ecto
+      import Ecto.Query
       alias CompanyApi.Repo
     end
   end

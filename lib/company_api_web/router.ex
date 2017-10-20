@@ -38,5 +38,8 @@ defmodule CompanyApiWeb.Router do
     pipe_through [:api, :auth]
 
     delete "/logout", SessionController, :delete
+    get "/conversations", ConversationController, :index
+    post "/conversations", ConversationController, :create
+    get "/messages", MessageController, :index
   end
 end
