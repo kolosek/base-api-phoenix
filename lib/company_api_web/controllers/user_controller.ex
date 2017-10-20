@@ -49,4 +49,23 @@ defmodule CompanyApiWeb.UserController do
         |> render("error.json", user: user)
     end
   end
+
+  def upload(conn, %{"image" => profile_image}) do
+    logged_user = CompanyApi.Guardian.Plug.current_resource(conn)
+    user = Repo.get(User, logged_user.id)
+    changeset =
+      user
+      |> User.image_changeset(%{profile_image: profile_image})
+
+    case Repo.update(changeset) do
+      {:ok, user} ->
+        conn
+        |> put_status(:ok)
+        |> render("upload.json", user: user)
+      {:error, user} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render("error.json", user: user)
+    end
+  end
 end

@@ -2,28 +2,43 @@ defmodule CompanyApiWeb.UserControllerTest do
   use CompanyApiWeb.ConnCase
   use Bamboo.Test, shared: :true
 
-  @valid_data %{name: "Jim", subname: "Doe", email: "doe@gmail.com", job: "CEO"}
-  @password "Random pass"
-  @short_pass "pass"
+  @valid_data %{name:    "Jim",
+                subname: "Doe",
+                email:   "doe@gmail.com",
+                job:     "CEO"
+               }
 
+  @password "Random pass"
+
+  @user %{name:    "John",
+          subname: "Doe",
+          email:   "doe@gmail.com",
+          job:     "engineer"
+         }
+
+  @user_jane %{name:    "Jane",
+               subname: "Doe",
+               email:   "jane@gmail.com",
+               job:     "architect"
+              }
   setup do
-    user = Repo.insert!(User.reg_changeset(%User{}, %{ name: "John",
-                                                       subname: "Doe",
-                                                       email: "doe@gmail.com",
-                                                       job: "engineer"
-                       }))
+    user =
+      %User{}
+      |> User.reg_changeset(@user)
+      |> Repo.insert!
+
     conn =
       build_conn()
       |> put_req_header("accept", "application/json")
+
     %{conn: conn, user: user}
   end
 
   test "tries to get all users", %{conn: conn, user: user} do
-    user_one = Repo.insert!(User.reg_changeset(%User{}, %{ name: "Jane",
-                                                           subname: "Doe",
-                                                           email: "jane@gmail.com",
-                                                           job: "architect"
-                           }))
+    user_one =
+      %User{}
+      |> User.reg_changeset(@user_jane)
+      |> Repo.insert!
 
     response =
       get(conn, user_path(conn, :index))
@@ -31,8 +46,10 @@ defmodule CompanyApiWeb.UserControllerTest do
 
     expected =
       [
-        %{"id" => user.id, "name" => "John", "subname" => "Doe", "email" => "doe@gmail.com", "job" => "engineer", "password" => nil},
-        %{"id" => user_one.id, "name" => "Jane", "subname" => "Doe", "email" => "jane@gmail.com", "job" => "architect", "password" => nil}
+        %{"id" => user.id, "name" => user.name, "subname" => user.subname,
+          "email" => user.email, "job" => user.job, "password" => nil},
+        %{"id" => user_one.id, "name" => user_one.name, "subname" => user_one.subname,
+          "email" => user_one.email, "job" => user_one.job, "password" => nil}
       ]
 
     assert response == expected
@@ -78,7 +95,7 @@ defmodule CompanyApiWeb.UserControllerTest do
 
     test "with short password", %{conn: conn, user: user} do
       response =
-        put(conn, user_path(conn, :change_password, user.id), password: @short_pass)
+        put(conn, user_path(conn, :change_password, user.id), password: "pass")
         |> json_response(422)
 
       assert response["errors"] != %{}
@@ -93,5 +110,30 @@ defmodule CompanyApiWeb.UserControllerTest do
       assert response["errors"] != %{}
       refute Repo.get_by(User, %{id: 0})
     end
+  end
+
+  test "uploads user profil image", %{conn: conn, user: user} do
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user)
+    profile_image = %Plug.Upload{path: "test/company_api_web/fixtures/image.jpg",
+                                 filename: "image.jpg"
+                                }
+
+
+    res =
+      post(new_conn, user_path(new_conn, :upload), image: profile_image)
+      |> json_response(200)
+
+    assert res["image"]["file_name"] == profile_image.filename
+  end
+
+  test "tries to upload wrong data", %{conn: conn, user: user} do
+    new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user)
+
+    upload = %Plug.Upload{path: "", filename: ""}
+    res =
+      post(new_conn, user_path(new_conn, :upload), image: upload)
+      |> json_response(422)
+
+    assert res["errors"] != %{}
   end
 end

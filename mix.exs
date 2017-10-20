@@ -20,7 +20,8 @@ defmodule CompanyApi.Mixfile do
   def application do
     [
       mod: {CompanyApi.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :guardian]
+      extra_applications: [:logger, :runtime_tools,
+                           :bamboo, :guardian, :arc_ecto]
     ]
   end
 
@@ -43,7 +44,9 @@ defmodule CompanyApi.Mixfile do
       {:cowboy, "~> 1.0"},
       {:bamboo, "~> 0.8"},
       {:guardian, "~> 1.0-beta"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:arc, "~> 0.8.0"},
+      {:arc_ecto, "~> 0.7.0"}
     ]
   end
 
