@@ -77,7 +77,7 @@ Before coding there are several parts of development that are going to be explai
 Note that following parts won't be described for whole application, but you'll get the idea. 
 
 ## Testing and writing models
-    While developing we want to write clean code that works, also think about specification and what that code needs to do before implementing it. That's why we're using [TDD](http://agiledata.org/essays/tdd.html) approach.
+  While developing we want to write clean code that works, also think about specification and what that code needs to do before implementing it. That's why we're using [TDD](http://agiledata.org/essays/tdd.html) approach.
 First in directory *test/companyapiweb/* create models directory and then create user_test.exs. After that create a module: 
 ```
 defmodule CompanyApiWeb.UserTest do
@@ -145,24 +145,132 @@ If we now run test again, it should pass. Add as many test cases as you want and
 This should wrap creation of simple models. Adding association is going to be mention earlier. 
 
 ## Testing and writing controllers
-Testing controllers is equally important as testing models. We are going to test registration of new user and getting all registered users in a system. Again we create test, this time in *test/company_api_web/controllers/* with name user_controller_test.exs. With controller testing we're going to use conn_case.exs script. Another important thing about test that wasn't mention while testing models (cause we didn't need it) is setup block. 
+  Testing controllers is equally important as testing models. We are going to test registration of new user and getting all registered users in a system. Again we create test, this time in *test/company_api_web/controllers/* with name user_controller_test.exs. With controller testing we're going to use conn_case.exs script. Another important thing about test that wasn't mention while testing models (cause we didn't need it) is setup block. 
 ```
-  setup do
-    user =
-      %User{}
-      |> User.reg_changeset(@user)
-      |> Repo.insert!
+setup do
+  user =
+    %User{}
+    |> User.reg_changeset(@user)
+    |> Repo.insert!
 
-    conn =
-      build_conn()
-      |> put_req_header("accept", "application/json")
+  conn =
+    build_conn()
+    |> put_req_header("accept", "application/json")
 
-    %{conn: conn, user: user}
+  %{conn: conn, user: user}
+end
+```
+Setup block is called before invokation of each test case, and in this block we prepare data for tests. We can return data from block in a form of tuple or map. In this block we will insert one user into database and create connection struct which is mockup of connection. Again constants can be used to setup data. 
+```
+@valid_data %{name:    "Jim",
+              subname: "Doe",
+              email:   "doe@gmail.com",
+              job:     "CEO"
+             }
+
+@user %{name:    "John",
+        subname: "Doe",
+        email:   "doe@gmail.com",
+        job:     "engineer"
+       }
+
+@user_jane %{name:    "Jane",
+             subname: "Doe",
+             email:   "jane@gmail.com",
+             job:     "architect"
+            }
+```
+Now let's write test that sends request for creating new user. Server should process request, generate password, create new user, send email with generated password and return user as a json. That sounds like a lot, but we'll go slow. Pay attention that you should try to cover all 'paths' and edge cases. First let's test with valid data, and then with invalid data.
+```
+describe "tries to create and render" do
+  test "user with valid data", %{conn: conn} do
+    response =
+      post(conn, user_path(conn, :create), user: @valid_data)
+      |> json_response(201)
+
+    assert Repo.get_by(User, name: "Jim")
+    assert_delivered_email Email.create_mail(response["password"], response["email"])
+  end
+
+  test "user with invalid data", %{conn: conn} do
+    response =
+      post(conn, user_path(conn, :create), user: %{})
+      |> json_response(422)
+
+    assert response["errors"] != %{}
+  end
+end
+```
+Each test sends post request to certain path and then we check json response and assert value. Running this test with `mix test test/company_api_web/controller/user_controller_test.exs` will result in errors. We don't have *user_path* function which means that route isn't defined. Open *lib/company_api_web/router.ex*. We'll add scope "/api" which will go through :api pipeline. We can define routes as resources, individually or as nested routes. 
+Define new resource like this:
+`resources "/users", UserController, only: [:index, :create]`
+With this, Phoenix creates routes which are mapped to index and create functions and handled by UserController. If you open console and type `mix phx.routes` you can see list of routes and there are *user_path* routes, one with verb GET and one with verb POST. Now if we run test again, this time we'll get another error, create function missing. Reason for this is that we don't have UserController.
+Add user_controller.ex in *lib/company_api_web/controllers*. Now define new module:
+```
+defmodule CompanyApiWeb.UserController do
+  use CompanyApiWeb, :controller
+end
+```
+Next we need to create that create function. Create function must accept conn struct(and also return it) and params. Params is struct which carries all data supplied by browser. We can use one powerful feature of Elixir, pattern matching, to match just the data we need with our variables.
+```
+def create(conn, %{"user" => user_data}) do
+  params = Map.put(user_data, "password", User.generate_password())
+  case Repo.insert(User.reg_changeset(%User{}, params)) do
+    {:ok, user} ->
+      conn
+      |> put_status(:created)
+      |> render("create.json", user: user)
+    {:error, user} ->
+      conn
+      |> put_status(:unprocessable_entity)
+      |> render("error.json", user: user)
+  end
+end
+```
+In our tests we send through post method params *user: @valid_data*, and that data is going to be matched with *user_data*. In User model define *generate_password()* function, so we can generate random passwords for every new user.
+```
+ def generate_password do
+    :crypto.strong_rand_bytes(@pass_length)
+    |> Base.encode64
+    |> binary_part(0, @pass_length)
   end
 ```
-Setup block is called before invoking each of test cases, and in this block we prepare data for tests. We can return data from block in a form of tuple or map. In this block we will insert one user into database and create connection struct which is mockup of connection.
-
-
+Set the length of a password as you wish. Since the user_data is a map we are going to put new generated password inside that map with key "password". 
+Although Elixir has try/rescue blocks they are rarely used. Usually combination of case and pattern matching is used for error handling. Function insert(note that we won't use insert! function cause it raises exception) returns one of two tuples:
+```
+{:ok, Ecto.Schema.t}
+{:error, Ecto.Changeset.t}
+```
+Based on returned tuple we send appropriate response. Since we're making JSON API, we should return data in json format. All data returned from controller is handled by appropriate view. If we run tests again, we are going to get another error. Last thing we need to do is to add view file. Create user_view.ex file in *lib/company_api_web/views/* and inside define new module and render methods.
+```
+defmodule CompanyApiWeb.UserView do
+  use CompanyApiWeb, :view
+  
+  def render("create.json", %{user: user}) do
+   render_one(user, CompanyApiWeb.UserView, "user.json")
+  end
+  
+  def render("error.json", %{user: user}) do
+    %{errors: translate_errors(user)}
+  end
+  
+  def render("user.json", %{user: user}) do
+    %{id: user.id, 
+      name: user.name, 
+      subname: user.subname, 
+      password: user.password, 
+      email: user.email, 
+      job: user.job}
+  end
+  
+  defp translate_errors(user) do
+    Ecto.Changeset.traverse_errors(user, &translate_error/1)
+  end
+end
+```
+First render method is being called from controller, and in that method we call render_one to which we pass key, view module, and template name, so we can pattern match method. Now we return data which is going to be encoded into json. We didn't have to call render_one method, we could return json right away, but this is more convinient. 
+Second render method renders errors provided by changeset struct in form of json. Built-in method *Ecto.Changeset.traverse_errors* extracts error strings from changeset.errors struct.
+If we remove that one line which asserts that email has been sent, our tests will pass. This rounds up how we test and write controllers. Now you can test and write index method and add more test cases that covers more code.
 
 
 
