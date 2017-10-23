@@ -42,6 +42,24 @@ defmodule ConversationControllerTest do
     assert response(res, 201)
   end
 
+  test "creates another chat for user", %{user_two: user_two, new_conn: new_conn} do
+    post(new_conn, conversation_path(new_conn, :create), %{recipient: user_two.id})
+
+    user_three =
+      %User{}
+      |> User.reg_changeset(%{name: "Jim",
+                              subname: "Morrison",
+                              email: "jimm@gmail.com",
+                              job: "singer"
+                             })
+      |> Repo.insert!
+
+    res =
+      post(new_conn, conversation_path(new_conn, :create), %{recipient: user_three.id})
+
+    assert response(res, 201)
+  end
+
   test "tries to create existing conversation", %{user_two: user_two, new_conn: new_conn} do
     post(new_conn, conversation_path(new_conn, :create), %{recipient: user_two.id})
 

@@ -10,7 +10,6 @@ defmodule CompanyApi.Repo.Migrations.CreateConversations do
       timestamps()
     end
 
-    create unique_index(:conversations, [:sender_id])
-    create unique_index(:conversations, [:recipient_id])
+    create unique_index(:conversations, [:sender_id, :recipient_id], name: :sender)
   end
 end

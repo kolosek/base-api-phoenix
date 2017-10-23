@@ -18,8 +18,7 @@ defmodule CompanyApiWeb.Conversation do
     changeset
     |> cast(params, [:sender_id, :recipient_id, :status])
     |> validate_required([:sender_id, :recipient_id])
-    |> unique_constraint(:sender_id)
-    |> unique_constraint(:recipient_id)
+    |> unique_constraint(:sender_id, name: :sender)
     |> foreign_key_constraint(:sender_id)
     |> foreign_key_constraint(:recipient_id)
   end
