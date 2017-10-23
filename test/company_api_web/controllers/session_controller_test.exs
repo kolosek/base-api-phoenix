@@ -3,13 +3,19 @@ defmodule CompanyApiWeb.SessionControllerTest do
 
   @invalid_credentials %{email: "jane@gmail.com", password: "jane"}
 
+  @user %{name: "John",
+          subname: "Doe",
+          email: "doe@gmail.com",
+          job: "engineer",
+          password: "RandomPass"
+         }
+
   setup do
-    user = Repo.insert!(User.reg_changeset(%User{}, %{name: "John",
-                                                      subname: "Doe",
-                                                      email: "doe@gmail.com",
-                                                      job: "engineer",
-                                                      password: "RandomPass"
-                       }))
+    user =
+      %User{}
+      |> User.reg_changeset(@user)
+      |> Repo.insert!
+
     conn =
       build_conn()
       |> put_req_header("accept", "application/json")

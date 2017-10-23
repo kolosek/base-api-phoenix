@@ -3,9 +3,19 @@ defmodule CompanyApiWeb.UserTest do
 
   alias CompanyApiWeb.User
 
-  @valid_attributes %{name: "John", subname: "Doe", email: "doe@gmail.com", job: "web developer"}
+  @valid_attributes %{name: "John",
+                      subname: "Doe",
+                      email: "doe@gmail.com",
+                      job: "web developer"
+                     }
+
   @missing_attributes %{}
-  @wrong_mail %{name: "John", subname: "Doe", email: "mail.mail.com", job: "web developer"}
+
+  @wrong_mail %{name: "John",
+                subname: "Doe",
+                email: "mail.mail.com",
+                job: "web developer"
+               }
 
   test "user with valid attributes" do
     user = User.reg_changeset(%User{}, @valid_attributes)

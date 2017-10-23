@@ -1,4 +1,6 @@
 defmodule CompanyApiWeb.ConversationTest do
+  use CompanyApi.DataCase
+
   alias CompanyApiWeb.Conversation
   alias CompanyApi.Repo
 

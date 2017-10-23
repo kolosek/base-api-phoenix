@@ -15,6 +15,12 @@ defmodule ConversationControllerTest do
               job:     "architect"
              }
 
+  @jim %{name: "Jim",
+         subname: "Morrison",
+         email: "jimm@gmail.com",
+         job: "singer"
+        }
+
   setup do
     user_one =
       %User{}
@@ -47,11 +53,7 @@ defmodule ConversationControllerTest do
 
     user_three =
       %User{}
-      |> User.reg_changeset(%{name: "Jim",
-                              subname: "Morrison",
-                              email: "jimm@gmail.com",
-                              job: "singer"
-                             })
+      |> User.reg_changeset(@jim)
       |> Repo.insert!
 
     res =

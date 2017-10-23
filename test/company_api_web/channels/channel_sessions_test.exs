@@ -1,7 +1,7 @@
 defmodule CompanyApiWeb.ChannelSessionsTest do
   use CompanyApi.DataCase, async: true
 
-  alias CompanyApiWeb.ChannelSessions
+  alias CompanyApi.ChannelSessions
 
   @user_id 1
 

@@ -118,7 +118,6 @@ defmodule CompanyApiWeb.UserControllerTest do
                                  filename: "image.jpg"
                                 }
 
-
     res =
       post(new_conn, user_path(new_conn, :upload), image: profile_image)
       |> json_response(200)
