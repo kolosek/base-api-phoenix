@@ -272,6 +272,51 @@ First render method is being called from controller, and in that method we call 
 Second render method renders errors provided by changeset struct in form of json. Built-in method *Ecto.Changeset.traverse_errors* extracts error strings from changeset.errors struct.
 If we remove that one line which asserts that email has been sent, our tests will pass. This rounds up how we test and write controllers. Now you can test and write index method and add more test cases that covers more code.
 
+## Email sending example
+There are several email libraries in Elixir, but in this project we decided to use [Bamboo](https://github.com/thoughtbot/bamboo). After initial setup, its usage is fairly easy. 
+Open *mix.exs* file and under deps function add following line:
+`{:bamboo, "~> 0.8"}`
+and then run following command:
+`mix deps.get`
+which will download dependency. After that add bamboo as extra_application in *application* function. In global config file add configuration for Bamboo:
+```
+config :company_api, CompanyApi.Mailer,
+  adapter: Bamboo.LocalAdapter
+```
+Here we're using Bamboo.LocalAdapter but there are other adapters also. Now, create module CompanyApi.Mailer and following line:
+`use Bamboo.Mailer, otp_app: :company_api`
+Before using mailer we should define email struct. Add into models directory Email.ex file(Note that you should first write test then add file but we'll skip that now).
+```
+defmodule CompanyApiWeb.Email do
+  import Bamboo.Email
+
+  def create_mail(password, email) do
+    new_email()
+    |> to(email)
+    |> from("company@gmail.com")
+    |> subject("Generated password")
+    |> html_body("<h1>Welcome to Chat</h1>")
+    |> text_body("Welcome. This is your generated password #{password}. You can change it anytime.")
+  end
+end
+```
+Function *create_mail(password, email)* returns email struct which we will use for sending.
+Before running tests we need to add configuration in *lib/config/test.exs*, same as before, only difference is in adapter which is now, Bamboo.TestAdapter.
+Adding this `use Bamboo.Test` allows as to use function such as `assert_delivered_email` in our tests.
+Now in UserController after successfull insert add next line:
+```
+Email.create_mail(user.password, user.email)
+|> CompanyApi.Mailer.deliver_later
+```
+This is going to create email struct and send it in the background. For asynchronuos sending there is [Task](https://hexdocs.pm/elixir/Task.html) module.
+If you wish to see sent mails, in *router.exs* add following:
+```
+if Mix.env == :dev do
+  forward "/send_mails", Bamboo.EmailPreviewPlug
+end
+```
+Now we can see delivered mails at *localhost:4000/sent_mails*.
+
 
 
 
