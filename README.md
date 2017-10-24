@@ -553,7 +553,200 @@ Last thing we need to do is to add associations in User module:
 ```
 With this we've set up our data model and you've seen brief example of Ecto associations. For many_to_many association read [docs](https://hexdocs.pm/ecto/Ecto.Schema.html#many_to_many/3).
 
+## Channels
+Essentially channels are Phoenix abstraction build on top of sockets. It is possible to have multiple channels over one socket connection. For detail explanations and understanding how channels recommendation is to read [official documentation](https://hexdocs.pm/phoenix/channels.html).
+Our goal is to send message via Websocket protocol, and we're going to start with writing channel tests. [Documentation](https://hexdocs.pm/phoenix/testing_channels.html#content) on channel testing is really helpful. 
+Create chat_room_test.exs in */test/company_api_web/channels/* directory. In setup block insert one user into database, create connection and sign in user. We're going to test message sending.
+```
+defmodule CompanyApiWeb.ChatRoomTest do
+  use CompanyApiWeb.ChannelCase
 
+  alias CompanyApi.Guardian, as: Guard
+  alias CompanyApiWeb.{ChatRoom, UserSocket, Conversation}
+
+  @first_user_data %{ name:    "John",
+                      subname: "Doe",
+                      email:   "doe@gmail.com",
+                      job:     "engineer"
+                    }
+
+  @second_user_data %{ name:    "Jane",
+                       subname: "Doe",
+                       email:   "jane@gmail.com",
+                       job:     "architect"
+                     }
+
+  setup do
+    user =
+      %User{}
+      |> User.reg_changeset(@first_user_data)
+      |> Repo.insert!
+
+    {:ok, token, _claims} = Guard.encode_and_sign(user)
+
+    {:ok, soc} = connect(UserSocket, %{"token" => token})
+    {:ok, _, socket} = subscribe_and_join(soc, ChatRoom, "room:chat")
+
+    {:ok, socket: socket, user: user}
+  end
+
+  test "checks messaging", %{socket: socket, user: u} do
+    user =
+      %User{}
+      |> User.reg_changeset(@second_user_data)
+      |> Repo.insert!
+
+    conv =
+      %Conversation{}
+      |> Conversation.changeset(%{sender_id: u.id, recipient_id: user.id})
+      |> Repo.insert!
+
+    {:ok, token, _claims} = Guard.encode_and_sign(user)
+    {:ok, soc} = connect(UserSocket, %{"token" => token})
+
+    {:ok, _, socketz} = subscribe_and_join(soc, ChatRoom, "room:chat")
+
+    push socket, "send_msg", %{user: user.id, conv: conv.id, message: "Hi! This is message"}
+    assert_push "receive_msg", %{message: message}
+    assert message.content == "Hi! This is message"
+    refute Repo.get!(CompanyApiWeb.Message, message.id) == nil
+
+    push socketz, "send_msg", %{user: u.id, conv: conv.id, message: "This is a reply"}
+    assert_push "receive_msg", %{message: reply}
+    assert reply.content == "This is a reply"
+    refute Repo.get!(CompanyApiWeb.Message, reply.id) == nil
+  end
+end
+```
+Well, this seem like a lot, but lets go step by step. In setup block we connect to socket with generated token, and then function *subscribe_and_join/3* joins user to listed topic. After that in test, those steps are repeated for second user and then conversation is created. Function *push/3* allows us to send messages directly through socket while *assert_push* or *assert_broadcast* asserts for pushed or broadcasted messages. Running test is goint to result in errors. 
+Open *lib/company_api_web/channels/user_socket.ex* and define new channel 
+`channel "room:*", CompanyApiWeb.ChatRoom`.
+While here modify *connect/2* and *id/1* functions. We want to make that only authenticated users can connect to socket.
+```
+def connect(%{"token" => token}, socket) do
+    case Guardian.Phoenix.Socket.authenticate(socket, CompanyApi.Guardian, token) do
+      {:ok, socket} ->
+        {:ok, socket}
+      {:error, _} ->
+        :error
+    end
+  end
+
+  def connect(_params, _socket), do: :error
+
+  def id(socket) do
+    user = Guardian.Phoenix.Socket.current_resource(socket)
+    "user_socket:#{user.id}"
+  end
+```
+Line `Guardian.Phoenix.Socket.authenticate(socket, CompanyApi.Guardian, token)` provides authentication. 
+Function *id/1* returns socket id, and we set it as a user id.
+Now lets create new channel. In the same directory create channel_room.ex file, but for now leave it be. Since we are making private chat we need to know socket we are sending messages to. There are some ways of achieving that. Decision here was to store opened socket connections in a map 
+`{user_id: socket}`. Elixir provides two abstractions for storing state, [GenServers](https://hexdocs.pm/elixir/GenServer.html) and [Agent](https://hexdocs.pm/elixir/Agent.html#content). For understanding concepts of GenServer or Agent documentation has to be read. 
+Open *lib/company_api/* and create channel_sessions.ex, this will be our GenServer for storing sockets. 
+```
+defmodule CompanyApi.ChannelSessions do
+  use GenServer
+
+  #Client side
+
+  def start_link(init_state) do
+    GenServer.start_link(__MODULE__, init_state, name: __MODULE__)
+  end
+
+  def save_socket(user_id, socket) do
+    GenServer.call(__MODULE__, {:save_socket, user_id, socket})
+  end
+
+  def delete_socket(user_id) do
+    GenServer.call(__MODULE__, {:delete_socket, user_id})
+  end
+
+  def get_socket(user_id) do
+    GenServer.call(__MODULE__, {:get_socket, user_id})
+  end
+
+  def clear() do
+    GenServer.call(__MODULE__, :clear)
+  end
+
+  #Server callbacks
+
+  def handle_call({:save_socket, user_id, socket}, _from, socket_map) do
+    case Map.has_key?(socket_map, user_id) do
+      true ->
+        {:reply, socket_map, socket_map}
+      false ->
+        new_state = Map.put(socket_map, user_id, socket)
+        {:reply, new_state, new_state}
+    end
+  end
+
+  def handle_call({:delete_socket, user_id}, _from, socket_map) do
+    new_state = Map.delete(socket_map, user_id)
+
+    {:reply, new_state, new_state}
+  end
+
+  def handle_call({:get_socket, user_id}, _from, socket_map) do
+    socket = Map.get(socket_map, user_id)
+
+    {:reply, socket, socket_map}
+  end
+
+  def handle_call(:clear, _from, state) do
+    {:reply, %{}, %{}}
+  end
+end
+```
+GenServer abstracts common client-server interaction. Client side calls server-side callbacks. These callbacks conduct opereations over map. 
+This module should start when application starts, so we'll add it in [Supervision tree](https://hexdocs.pm/elixir/Supervisor.html#content). This is one of most beautiful things in Elixir. Open application.ex file in the same directory and add this line `worker(CompanyApi.ChannelSessions, [%{}])` in children list. This will start ChannelSessions at the start of the application with inital state `%{}`.
+Now we can write ChatRoom channel. Every channel has to implement two callbacks *join/3* and *handle_in/3*.
+```elixir
+defmodule CompanyApiWeb.ChatRoom do
+  use CompanyApiWeb, :channel
+
+  alias CompanyApi.{ChannelSessions, ChannelUsers}
+  alias CompanyApiWeb.Message
+
+  def join("room:chat", _payload, socket) do
+    user = Guardian.Phoenix.Socket.current_resource(socket)
+    send(self(), {:after_join, user})
+
+    {:ok, socket}
+  end
+
+  def handle_in("send_msg", %{"user" => id, "conv" => conv_id, "message" => content}, socket) do
+    case ChannelSessions.get_socket id do
+      nil ->
+        {:error, socket}
+      socketz ->
+        user = Guardian.Phoenix.Socket.current_resource(socket)
+        case Message.create_message(user.id, conv_id, content) do
+          nil ->
+            {:noreply, socket}
+          message ->
+            push socketz, "receive_msg", %{message: message}
+            {:noreply, socket}
+        end
+    end
+  end
+
+  def handle_info({:after_join, user}, socket) do
+    ChannelSessions.save_socket(user.id, socket)
+
+    {:noreply, socket}
+  end
+
+  def terminate(_msg, socket) do
+    user = Guardian.Phoenix.Socket.current_resource(socket)
+    ChannelSessions.delete_socket user.id
+  end
+end
+```
+Since we need to save socket, it can be only done after socket is created which is at the end of *join/3* callback. For that reason we send message to ourself which is going to call callback method *handle_info/2*. There we add socket into the map. Callback *handle_in/3* creates a message and sends it to appropriate user. Function *teminate/2* removes socket from map.
+
+With this being set, chat app API has been finished. This tutorial covers all listed parts from earlier with some advanced stuff from [OTP](http://learnyousomeerlang.com/what-is-otp) like GenServer. It aims to show workflow while developing one Elixir application, and for complete understanding requires documentation reading. After all, there are all informations. Recommended place for all Elixir enthusiasts, [Elixir Forum](https://elixirforum.com/).
 
 
 
