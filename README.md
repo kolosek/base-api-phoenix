@@ -452,8 +452,106 @@ Before adding new route for logging out, we need to define "new scope".
 Actually this is going to be the same "/api" scope again, but it will go through two pipelines now: `pipe_through [:api, :auth]`. 
 Why are we doing this? Every new route that needs to be authenticated will be places inside of this new scope. Also if we want to logout, we need to be authenticated first. With this we've covered authenticating with Guardian. Later socket authentication is going to be mentioned, and it's even easier.
 
+## Associations example
+Since this is a chat app, message history has to be saved somehow. We're going to add two more entities that will represent conversation between two users and user's messages. This will be a good opportunity to show examples of associations in Ecto.
+First entity that we're going to add is conversation entity. Conversations will belong to both user involved in chat, and user is going to have many conversations. Also conversations will have many messages which is second entity. Messages will belong to user and certian conversation. In this case user represents a person who sends messages. Other attributes of message are date and content. 
+In a few sentences we've described our data model. Each of these data models will have their own tests, controllers and views, but since we've explained all of these stuff already, in this part we're going to focus on associations between these entities. Note that the only thing you need to do is to write function for create of conversation, creation of messages and getting message history.
 
+### Conversations
+Firstly, lets add conversations migration. 
+Run command `mix ecto.gen.migration create_conversations`. Now we need to create table conversations with correct columns:
+```
+  def change do
+    create table(:conversations) do
+      add :sender_id, references(:users, null: false)
+      add :recipient_id, references(:users, null: false)
 
+      timestamps()
+    end
+
+    create unique_index(:conversations, [:sender_id, :recipient_id], name: :sender)
+  end
+```
+As you can see, we're adding foreign keys sender_id and recipient_id and we are referencing users table. This will represent our two users in conversation. Both keys can't be null. Last thing we want to do is to create unique_index on both columns which correspond to unique constraint. We're doing this because we don't want duplicate conversations with the same ids.
+Lets create model now:
+```
+defmodule CompanyApiWeb.Conversation do
+  use CompanyApiWeb, :model
+
+  alias CompanyApiWeb.{User, Message}
+
+  schema "conversations" do
+    field :status, :string
+
+    belongs_to :sender, User, foreign_key: :sender_id
+    belongs_to :recipient, User, foreign_key: :recipient_id
+    has_many :messages, Message
+
+    timestamps()
+  end
+
+  def changeset(changeset, params \\ %{}) do
+    changeset
+    |> cast(params, [:sender_id, :recipient_id, :status])
+    |> validate_required([:sender_id, :recipient_id])
+    |> unique_constraint(:sender_id, name: :sender)
+    |> foreign_key_constraint(:sender_id)
+    |> foreign_key_constraint(:recipient_id)
+  end
+```
+Observe new functions. Functions belongs_to and has_many represents associations. Usually belongs_to function is defined with a name and a referenced module, but this time since we're have two references to the same module we have to add a correspond foreign key column. Same story goes for has_many association, association name and module(we're going to create Message module soon). Now the changeset. We've added two foreign_key_contraint functions, one for each foreign key and unique_constraint function (because of composite unique columns, only one has to specified). All of these contraints are checked on database level.
+
+### Mesages
+Second entity is messages. Run `mix ecto.gen.migration create_messages`.
+Add create and table functions:
+```
+  def change do
+    create table(:messages) do
+      add :sender_id, references(:users, null: false)
+      add :conversation_id, references(:conversations, null: false)
+      add :content, :varchar
+      add :date, :naive_datetime
+
+      timestamps()
+    end
+
+    create index(:messages, [:sender_id])
+    create index(:messages, [:conversation_id])
+  end
+```
+Same story as before. Two foreign keys, messages belong to user (sender) and conversation. This time we don't need unique contraint, so we just index mentioned fields.
+One look at the model:
+```
+defmodule CompanyApiWeb.Message do
+  use CompanyApiWeb, :model
+  
+  alias CompanyApiWeb.{User, Conversation}
+
+  schema "messages" do
+    field :content, :string
+    field :date, :naive_datetime
+
+    belongs_to :conversation, Conversation
+    belongs_to :sender, User, foreign_key: :sender_id
+
+    timestamps()
+  end
+
+  def changeset(changeset, params \\ %{}) do
+    changeset
+    |> cast(params, [:sender_id, :conversation_id, :content, :date])
+    |> validate_required([:sender_id, :conversation_id, :content, :date])
+    |> foreign_key_constraint(:sender_id)
+    |> foreign_key_constraint(:conversation_id)
+  end
+```
+Last thing we need to do is to add associations in User module:
+```
+ has_many :sender_conversations, Conversation, foreign_key: :sender_id
+ has_many :recipient_conversations, Conversation, foreign_key: :recipient_id
+ has_many :messages, Message, foreign_key: :sender_id
+```
+With this we've set up our data model and you've seen brief example of Ecto associations. For many_to_many association read [docs](https://hexdocs.pm/ecto/Ecto.Schema.html#many_to_many/3).
 
 
 
