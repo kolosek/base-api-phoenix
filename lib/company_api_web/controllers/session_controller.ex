@@ -4,7 +4,8 @@ defmodule CompanyApiWeb.SessionController do
   alias CompanyApiWeb.User
 
   def create(conn, %{"creds" => params}) do
-    case User.check_registration(Map.new(params, fn {k, v} -> {String.to_atom(k), v} end)) do
+    new_params = Map.new(params, fn {k, v} -> {String.to_atom(k), v} end)
+    case User.check_registration(new_params) do
       {:ok, user} ->
         new_conn = Guardian.Plug.sign_in(conn, CompanyApi.Guardian, user)
         token    = Guardian.Plug.current_token(new_conn)
