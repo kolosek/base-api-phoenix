@@ -3,10 +3,10 @@ defmodule CompanyApiWeb.SessionControllerTest do
 
   @invalid_credentials %{email: "jane@gmail.com", password: "jane"}
 
-  @user %{name: "John",
-          subname: "Doe",
-          email: "doe@gmail.com",
-          job: "engineer",
+  @user %{name:     "John",
+          subname:  "Doe",
+          email:    "doe@gmail.com",
+          job:      "engineer",
           password: "RandomPass"
          }
 
