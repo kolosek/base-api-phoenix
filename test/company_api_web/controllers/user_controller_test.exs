@@ -35,7 +35,7 @@ defmodule CompanyApiWeb.UserControllerTest do
   end
 
   test "tries to get all users", %{conn: conn, user: user} do
-    user_one =
+    jane =
       %User{}
       |> User.reg_changeset(@user_jane)
       |> Repo.insert!
@@ -48,8 +48,8 @@ defmodule CompanyApiWeb.UserControllerTest do
       [
         %{"id" => user.id, "name" => user.name, "subname" => user.subname,
           "email" => user.email, "job" => user.job, "password" => nil},
-        %{"id" => user_one.id, "name" => user_one.name, "subname" => user_one.subname,
-          "email" => user_one.email, "job" => user_one.job, "password" => nil}
+        %{"id" => jane.id, "name" => jane.name, "subname" => jane.subname,
+          "email" => jane.email, "job" => jane.job, "password" => nil}
       ]
 
     assert response == expected

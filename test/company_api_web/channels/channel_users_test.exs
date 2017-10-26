@@ -1,7 +1,8 @@
 defmodule CompanyApiWeb.ChannelUsersTest do
   use CompanyApi.DataCase
 
-  alias CompanyApiWeb.{ChannelUsers, User}
+  alias CompanyApiWeb.User
+  alias CompanyApi.ChannelUsers
 
   @channel_one 1
   @channel_two 2

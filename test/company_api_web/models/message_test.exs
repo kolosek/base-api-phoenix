@@ -3,12 +3,6 @@ defmodule CompanyApiWeb.MessagesTest do
 
   alias CompanyApiWeb.{Message, User, Conversation}
 
-  @valid_attributes %{sender_id: 1,
-                      conversation_id: 1,
-                      content: "This is the message.",
-                      date: Ecto.DateTime.from_erl(:erlang.localtime)
-                     }
-
   @user_one %{name:    "John",
               subname: "Doe",
               email:   "doe@gmail.com",
@@ -42,9 +36,12 @@ defmodule CompanyApiWeb.MessagesTest do
     {:ok, user: user_one, conv: conversation}
   end
 
-  test "message with valid data" do
-    message = Message.changeset(%Message{}, @valid_attributes)
-
+  test "message with valid data", %{user: user_one, conv: conversation} do
+    message = Message.changeset(%Message{}, %{sender_id: user_one.id,
+                                              conversation_id: conversation.id,
+                                              content: "This is the message.",
+                                              date: DateTime.to_naive(DateTime.utc_now)
+                                             })
     assert message.valid?
   end
 
