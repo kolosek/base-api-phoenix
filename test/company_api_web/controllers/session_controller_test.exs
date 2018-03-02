@@ -1,20 +1,12 @@
 defmodule CompanyApiWeb.SessionControllerTest do
   use CompanyApiWeb.ConnCase
 
+  import CompanyApi.Factory
+
   @invalid_credentials %{email: "jane@gmail.com", password: "jane"}
 
-  @user %{name:     "John",
-          subname:  "Doe",
-          email:    "doe@gmail.com",
-          job:      "engineer",
-          password: "RandomPass"
-         }
-
   setup do
-    user =
-      %User{}
-      |> User.reg_changeset(@user)
-      |> Repo.insert!
+    user = insert(:user)
 
     conn =
       build_conn()

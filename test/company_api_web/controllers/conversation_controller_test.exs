@@ -1,36 +1,11 @@
 defmodule ConversationControllerTest do
   use CompanyApiWeb.ConnCase
 
-  alias CompanyApiWeb.{User, Conversation}
-
-  @user_one %{name:    "John",
-              subname: "Doe",
-              email:   "doe@gmail.com",
-              job:     "engineer"
-             }
-
-  @user_two %{name:    "Jane",
-              subname: "Doe",
-              email:   "jane@gmail.com",
-              job:     "architect"
-             }
-
-  @jim %{name: "Jim",
-         subname: "Morrison",
-         email: "jimm@gmail.com",
-         job: "singer"
-        }
+  import CompanyApi.Factory
 
   setup do
-    user_one =
-      %User{}
-      |> User.reg_changeset(@user_one)
-      |> Repo.insert!
-
-    user_two =
-      %User{}
-      |> User.reg_changeset(@user_two)
-      |> Repo.insert!
+    user_one = insert(:user)
+    user_two = insert(:user)
 
     conn =
       build_conn()
@@ -51,10 +26,7 @@ defmodule ConversationControllerTest do
   test "creates another chat for user", %{user_two: user_two, new_conn: new_conn} do
     post(new_conn, conversation_path(new_conn, :create), %{recipient: user_two.id})
 
-    user_three =
-      %User{}
-      |> User.reg_changeset(@jim)
-      |> Repo.insert!
+    user_three = insert(:user)
 
     res =
       post(new_conn, conversation_path(new_conn, :create), %{recipient: user_three.id})
@@ -81,10 +53,7 @@ defmodule ConversationControllerTest do
   end
 
   test "gets active conversations", %{user_one: user_one, user_two: user_two, new_conn: new_conn} do
-    conversation =
-      %Conversation{}
-      |> Conversation.changeset(%{sender_id: user_one.id, recipient_id: user_two.id})
-      |> Repo.insert!
+    conversation = insert(:conversation, sender: user_one, recipient: user_two)
 
     res =
       get(new_conn, conversation_path(new_conn, :index))

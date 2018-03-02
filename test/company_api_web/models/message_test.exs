@@ -1,37 +1,14 @@
 defmodule CompanyApiWeb.MessagesTest do
   use CompanyApi.DataCase, async: true
 
-  alias CompanyApiWeb.{Message, User, Conversation}
+  alias CompanyApiWeb.Message
 
-  @user_one %{name:    "John",
-              subname: "Doe",
-              email:   "doe@gmail.com",
-              job:     "engineer"
-             }
-
-  @user_two %{name:    "Jane",
-              subname: "Doe",
-              email:   "jane@gmail.com",
-              job:     "architect"
-             }
-
+  import CompanyApi.Factory
+  
   setup do
-    user_one =
-      %User{}
-      |> User.reg_changeset(@user_one)
-      |> Repo.insert!
-
-    user_two =
-      %User{}
-      |> User.reg_changeset(@user_two)
-      |> Repo.insert!
-
-    conversation =
-      %Conversation{}
-      |> Conversation.changeset(%{sender_id: user_one.id,
-                                  recipient_id: user_two.id
-                                 })
-      |> Repo.insert!
+    user_one = insert(:user)
+    user_two = insert(:user)
+    conversation = insert(:conversation, sender: user_one, recipient: user_two)
 
     {:ok, user: user_one, conv: conversation}
   end

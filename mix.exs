@@ -21,7 +21,8 @@ defmodule CompanyApi.Mixfile do
     [
       mod: {CompanyApi.Application, []},
       extra_applications: [:logger, :runtime_tools,
-                           :bamboo, :guardian, :arc_ecto]
+                           :bamboo, :guardian, :arc_ecto, 
+                           :ex_machina]
     ]
   end
 
@@ -46,7 +47,8 @@ defmodule CompanyApi.Mixfile do
       {:guardian, "~> 1.0-beta"},
       {:poison, "~> 3.1"},
       {:arc, "~> 0.8.0"},
-      {:arc_ecto, "~> 0.7.0"}
+      {:arc_ecto, "~> 0.7.0"},
+      {:ex_machina, "~> 1.0"}
     ]
   end
 

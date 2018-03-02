@@ -2,30 +2,20 @@ defmodule CompanyApiWeb.UserControllerTest do
   use CompanyApiWeb.ConnCase
   use Bamboo.Test, shared: :true
 
+  import CompanyApi.Factory
+
   @valid_data %{name:    "Jim",
                 subname: "Doe",
                 email:   "doe@gmail.com",
                 job:     "CEO"
                }
 
+  @invalid_data %{}
+
   @password "Random pass"
 
-  @user %{name:    "John",
-          subname: "Doe",
-          email:   "doe@gmail.com",
-          job:     "engineer"
-         }
-
-  @user_jane %{name:    "Jane",
-               subname: "Doe",
-               email:   "jane@gmail.com",
-               job:     "architect"
-              }
   setup do
-    user =
-      %User{}
-      |> User.reg_changeset(@user)
-      |> Repo.insert!
+    user = insert(:user)
 
     conn =
       build_conn()
@@ -34,25 +24,8 @@ defmodule CompanyApiWeb.UserControllerTest do
     %{conn: conn, user: user}
   end
 
-  test "tries to get all users", %{conn: conn, user: user} do
-    jane =
-      %User{}
-      |> User.reg_changeset(@user_jane)
-      |> Repo.insert!
-
-    response =
-      get(conn, user_path(conn, :index))
-      |> json_response(200)
-
-    expected =
-      [
-        %{"id" => user.id, "name" => user.name, "subname" => user.subname,
-          "email" => user.email, "job" => user.job, "password" => nil},
-        %{"id" => jane.id, "name" => jane.name, "subname" => jane.subname,
-          "email" => jane.email, "job" => jane.job, "password" => nil}
-      ]
-
-    assert response == expected
+  test "tries to get all users", %{conn: conn} do
+    get(conn, user_path(conn, :index)) |> json_response(200)
   end
 
   describe "tries to create and render" do
@@ -61,13 +34,13 @@ defmodule CompanyApiWeb.UserControllerTest do
         post(conn, user_path(conn, :create), user: @valid_data)
         |> json_response(201)
 
-      assert Repo.get_by(User, name: "Jim")
+      assert Repo.get_by(User, @valid_data)
       assert_delivered_email Email.create_mail(response["password"], response["email"])
     end
 
     test "user with invalid data", %{conn: conn} do
       response =
-        post(conn, user_path(conn, :create), user: %{})
+        post(conn, user_path(conn, :create), user: @invalid_data)
         |> json_response(422)
 
       assert response["errors"] != %{}
@@ -79,7 +52,7 @@ defmodule CompanyApiWeb.UserControllerTest do
         |> json_response(422)
 
       assert response["errors"] != %{}
-      refute Repo.get_by(User, %{name: "Jim"})
+      refute Repo.get_by(User, @valid_data)
     end
  end
 
@@ -91,15 +64,6 @@ defmodule CompanyApiWeb.UserControllerTest do
 
       assert response == @password
       assert Repo.get_by(User, %{id: user.id}).password == @password
-    end
-
-    test "with short password", %{conn: conn, user: user} do
-      response =
-        put(conn, user_path(conn, :change_password, user.id), password: "pass")
-        |> json_response(422)
-
-      assert response["errors"] != %{}
-      refute Repo.get_by(User, %{id: user.id}).password
     end
 
     test "with wrong user id", %{conn: conn} do

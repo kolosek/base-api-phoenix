@@ -1,37 +1,13 @@
 defmodule CompanyApiWeb.MessageControllerTest do
   use CompanyApiWeb.ConnCase
 
-  alias CompanyApiWeb.{User, Conversation, Message}
-
-  @user_one %{name:    "John",
-              subname: "Doe",
-              email:   "doe@gmail.com",
-              job:     "engineer"
-             }
-
-  @user_two %{name:    "Jane",
-              subname: "Doe",
-              email:   "jane@gmail.com",
-              job:     "architect"
-             }
+  import CompanyApi.Factory
 
   setup do
-    user_one =
-      %User{}
-      |> User.reg_changeset(@user_one)
-      |> Repo.insert!
+    user_one = insert(:user)
+    user_two = insert(:user)
 
-    user_two =
-      %User{}
-      |> User.reg_changeset(@user_two)
-      |> Repo.insert!
-
-    conversation =
-      %Conversation{}
-      |> Conversation.changeset(%{sender_id: user_one.id,
-                                  recipient_id: user_two.id,
-                                 })
-      |> Repo.insert!
+    conversation = insert(:conversation, sender: user_one, recipient: user_two)
 
     conn =
       build_conn()
@@ -43,9 +19,9 @@ defmodule CompanyApiWeb.MessageControllerTest do
   end
 
   test "gets all messages for conversation", %{user: user, new_conn: new_conn, conv: conv} do
-    m_one   = Message.create_message(user.id, conv.id, "First message")
-    m_two   = Message.create_message(user.id, conv.id, "Second message")
-    m_three = Message.create_message(user.id, conv.id, "Third message")
+    m_one   = insert(:message, sender: user, conversation: conv)
+    m_two   = insert(:message, sender: user, conversation: conv)
+    m_three = insert(:message, sender: user, conversation: conv)
 
     res =
       get(new_conn, message_path(new_conn, :index), %{conv: conv.id})
